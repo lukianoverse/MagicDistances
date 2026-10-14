@@ -62,7 +62,7 @@ public class OneMeasure {
                 (a, b) -> hypot(a.x() - b.x(), a.y() - b.y()));
     }
 
-    private double findMedian(List<Segment> segments, Rangefinder method) {
+    static double findMedian(List<Segment> segments, Rangefinder method) {
         if (segments.isEmpty()) return Double.NaN;
         segments.sort(Comparator.comparing(s -> s.getLength(method)));
         int middle = segments.size() / 2;
@@ -73,7 +73,7 @@ public class OneMeasure {
                 : segments.get(middle).getLength(method);
     }
 
-    private double findMedian(List<Segment> segments) {
+    static double findMedian(List<Segment> segments) {
         return findMedian(segments,
                 (a, b) -> hypot(a.x() - b.x(), a.y() - b.y()));
     }
@@ -95,6 +95,8 @@ public class OneMeasure {
 
         List<Segment> segments = getSegmentsFromPoints(points);
 
+        segments.forEach(IO::println);
+
         double avg = findAvgLength(segments);
         double avgNeum = findAvgLength(segments,
                 (a, b) -> abs(a.x() - b.x()) + abs(a.y() - b.y()));
@@ -107,6 +109,12 @@ public class OneMeasure {
         double medMoor = findMedian(segments,
                 (a, b) -> max(abs(a.x() - b.x()), abs(a.y() - b.y())));
 
+        segments.sort(Comparator.comparingDouble(Segment::getLength));
+        StringBuilder sortedSegmentsReport = new StringBuilder();
+        for (Segment s : segments)
+            sortedSegmentsReport.append(s.toString());
+        String report = sortedSegmentsReport.toString();
+
         IO.println("""
                    Для списка %s:
                    среднее: %f
@@ -115,14 +123,19 @@ public class OneMeasure {
                    медиана: %f
                    медиана по Нойманну: %f
                    медиана по Муру: %f
-                   """.formatted(segments.toString(), avg, avgNeum, avgMoor, med, medNeum, medMoor)
+                   """.formatted(report, avg, avgNeum, avgMoor, med, medNeum, medMoor)
         );
 
     }
 
 
 }
-record Point(int x, int y) {}
+record Point(int x, int y) {
+    @Override
+    public String toString() {
+        return "<%d %d>".formatted(x, y);
+    }
+}
 record Segment(Point a, Point b) {
     double getLength(Rangefinder method) {
         return method.findDistance(a, b);
@@ -131,6 +144,10 @@ record Segment(Point a, Point b) {
         return hypot(a.x() - b.x(), a.y() - b.y());
     }
 
+    @Override
+    public String toString() {
+        return "{%s %s}".formatted(a, b);
+    }
 }
 interface Rangefinder {
     double findDistance(Point a, Point b);
